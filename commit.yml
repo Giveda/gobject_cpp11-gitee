@@ -2,25 +2,10 @@
 branches: {
   }
 fileChange:
-  /Makefile:
-    newFile: !uuid 'ab74ea5aff2ae90ff7fbb59b0a33a1b29b7ee5f5'
-    oldFile: null
   /README.md:
-    newFile: !uuid 'e7e1737973ec40b187ad8b7e2b5267398a3bd6ec'
-    oldFile: null
-  /gObject.cpp:
-    newFile: !uuid '22c869861855c47436c9ad173d3aea0686d2eaae'
-    oldFile: null
-  /gObject.h:
-    newFile: !uuid '65d7b81a2dd2e60cc1559d56f93c664979309b2b'
-    oldFile: null
-  /main.cpp:
-    newFile: !uuid 'b9f5ae404d75fe1a6d5757f1f68f458220626a67'
-    oldFile: null
-  /用户文档.doc:
-    newFile: !uuid 'd6df56c63a67c1ea2dd756707d042805fd19b3d0'
-    oldFile: null
-gitCommitId: !uuid '768fb59ffb47b2a98fcc8a074ea0cc95c4e21678'
+    newFile: !uuid '8400a8f07773a40d4b1b78a891e6a8529c198af0'
+    oldFile: !uuid 'e7e1737973ec40b187ad8b7e2b5267398a3bd6ec'
+gitCommitId: !uuid '4536a6a8edff0f4280ac25600a8b339d18275228'
 renames: {
   }
-revisionId: 1
+revisionId: 2
