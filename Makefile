@@ -17,7 +17,7 @@
 #
 CXX = g++
 LINK = g++
-CXXFLAGS = -std=c++11
+CXXFLAGS = -Wall -W  -Wno-pmf-conversions -std=c++11
 LFLAGS =
 INCPATH = -I.
 LIBS = 

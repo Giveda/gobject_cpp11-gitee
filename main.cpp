@@ -89,19 +89,19 @@ int main(int /*argc*/, char** /*argv*/)
     printf("before connect\n");
     
     Receiver *r = new Receiver;
-    GObject::connect<Receiver, const string&, int>(s, s->selected, r, &Receiver::slotSelected);
+    GObject::connect(s, s->selected, r, &Receiver::slotSelected);
     printf("after connect\n");
     s->notify();
     
     printf("try to connect again\n");
-    GObject::connect<Receiver, const string&, int>(s, s->selected, r, &Receiver::slotSelected);
+    GObject::connect(s, s->selected, r, &Receiver::slotSelected);
     
-    GObject::disconnect<Receiver, const string&, int>(s, s->selected, r, &Receiver::slotSelected);
+    GObject::disconnect(s, s->selected, r, &Receiver::slotSelected);
     printf("after disconnect\n");
     s->notify();
     
     printf("re-connected, but delete receiver\n");
-    GObject::connect<Receiver, const string&, int>(s, s->selected, r, &Receiver::slotSelected);
+    GObject::connect(s, s->selected, r, &Receiver::slotSelected);
     delete r;
     s->notify();
     
