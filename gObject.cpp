@@ -66,7 +66,6 @@ GObject::~GObject()
     destructAsReceiver();
 
     sigDestroyed(this);
-
     destructAsSender();
     
     delete m_priv;
