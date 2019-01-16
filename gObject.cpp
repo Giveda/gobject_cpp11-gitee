@@ -65,7 +65,7 @@ GObject::~GObject()
 {
     destructAsReceiver();
 
-	sigDestroyed(this);
+    sigDestroyed(this);
 
     destructAsSender();
     

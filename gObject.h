@@ -212,7 +212,7 @@ private:
 class  GObject
 {
 signals:
-	GSignal<GObject*> sigDestroyed;
+    GSignal<GObject*> sigDestroyed;
 
 private:
     GObjectPrivate *m_priv;
