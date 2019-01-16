@@ -34,7 +34,6 @@ class Receiver : public GObject
 {
 public:
     Receiver ( )
-    :data(2)
     {}
     
 public slots:
@@ -47,11 +46,8 @@ public slots:
      */
     void  slotSelected( const string& str, int idx)
     {
-        printf("param=[%s] [%d], data=[%d]\n", str.c_str(), idx, data );
+        printf("param=[%s, %d]\n", str.c_str(), idx );
     }
-    
-private:
-    int data;
 };
 
 /**
@@ -74,10 +70,11 @@ public:
      */
     void notify()
     {
-        string a("hhhhhhhhhhhhhhhhhhhh");
-        selected(a, 3); // 触发事件方式一
-        a = "gggggggggg";
-        selected.emit(a, 6); //触发事件方式二
+        string a("giveda.com");
+        selected(a, 3);
+
+        a = "Hello, Giveda!";
+        selected.emit(a, 6);
     }
 };
 
@@ -93,9 +90,6 @@ int main(int /*argc*/, char** /*argv*/)
     printf("after connect\n");
     s->notify();
     
-    printf("try to connect again\n");
-    GObject::connect(s, s->selected, r, &Receiver::slotSelected);
-    
     GObject::disconnect(s, s->selected, r, &Receiver::slotSelected);
     printf("after disconnect\n");
     s->notify();
@@ -107,3 +101,4 @@ int main(int /*argc*/, char** /*argv*/)
     
     return 0;
 }
+

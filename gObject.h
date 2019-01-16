@@ -207,8 +207,13 @@ private:
 #define SIGNAL_POINTER(SlotFuncType)  list<GSlot*>*
 #define SIGNAL_TYPE_ITERATOR(SlotFuncType)  list<GSlot*>::iterator
 
+#define signals public
+
 class  GObject
 {
+signals:
+	GSignal<GObject*> sigDestroyed;
+
 private:
     GObjectPrivate *m_priv;
 

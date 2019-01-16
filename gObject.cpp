@@ -63,9 +63,11 @@ GObject::GObject ( GObject *p,  const char *n )
 
 GObject::~GObject()
 {
-    destructAsSender();
-
     destructAsReceiver();
+
+	sigDestroyed(this);
+
+    destructAsSender();
     
     delete m_priv;
 }
