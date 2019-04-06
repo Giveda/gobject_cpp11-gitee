@@ -46,7 +46,13 @@ public slots:
      */
     void  slotSelected( const string& str, int idx)
     {
-        printf("param=[%s, %d]\n", str.c_str(), idx );
+        printf("Receiver::slotSelected is called. ");
+        printf("param=[%s] [%d]\n", str.c_str(), idx);
+    }
+    
+    void slotClicked()
+    {
+        printf("Receiver::slotClicked is called\n");
     }
 };
 
@@ -60,7 +66,12 @@ public:
     /**
      * 定义一个名称为selected的信号；该信号接收两个参数，参数类型分别为const string&和int
      */
-    GSignal<const string&, int> selected;
+    GSignal<void(const string&, int)> selected;
+    
+    /**
+     * 定义一个名称为clicked的信号；该信号不接收任何参数
+     */
+    GSignal<void(void)> clicked;
     
 public:
     /**
@@ -72,9 +83,7 @@ public:
     {
         string a("giveda.com");
         selected(a, 3);
-
-        a = "Hello, Giveda!";
-        selected.emit(a, 6);
+        clicked();
     }
 };
 
@@ -87,17 +96,22 @@ int main(int /*argc*/, char** /*argv*/)
     
     Receiver *r = new Receiver;
     GObject::connect(s, s->selected, r, &Receiver::slotSelected);
+    GObject::connect(s, s->clicked, r, &Receiver::slotClicked);
     printf("after connect\n");
     s->notify();
     
     GObject::disconnect(s, s->selected, r, &Receiver::slotSelected);
+    GObject::disconnect(s, s->clicked, r, &Receiver::slotClicked);
     printf("after disconnect\n");
     s->notify();
     
     printf("re-connected, but delete receiver\n");
     GObject::connect(s, s->selected, r, &Receiver::slotSelected);
+    GObject::connect(s, s->clicked, r, &Receiver::slotClicked);
     delete r;
     s->notify();
+    
+    delete s;
     
     return 0;
 }
