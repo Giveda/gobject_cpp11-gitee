@@ -24,7 +24,8 @@ struct SenderPair
 {
     SenderPair(GObject* _sender, SIGNAL_POINTER(void*) _signal )
         :sender(_sender), signal(_signal)
-    { }
+    {
+	}
 
     bool operator==(const SenderPair &r ) const
     {
