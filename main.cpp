@@ -26,9 +26,13 @@
  * @date 2018-12-27
  */
 
+
 /**
  * @class Receiver
  * @brief Receiver类负责接收信号；并进行业务处理。
+ * 通常情况下，一个文件应当只包含一个类，应当由一个名为receiver.cpp/receiver.h的文件来放置Receiver类。
+ * receiver.cpp/receiver.h不需要include(依赖)Sender.h。
+ *
  */
 class Receiver : public GObject
 {
@@ -53,6 +57,8 @@ public slots:
 /**
  * @class Sender
  * @brief Sender类负责定义信号；并负责在需要时，发射信号。
+ * 通常情况下，一个文件应当只包含一个类，应当由一个名为sender.cpp/sender.h的文件来放置Sender类。
+ * sender.cpp/sender.h不需要include(依赖)receiver.h。
  */
 class Sender  : public GObject
 {
@@ -79,6 +85,11 @@ public:
 };
 
 
+/**
+ * @brief 通常情况下，main函数应当放置在一个单独文件比如名为main.cpp。
+ * main.cpp需要include(依赖)Sender.h和Receiver.h。
+ *
+ */
 int main(int /*argc*/, char** /*argv*/)
 {
     Sender *s = new Sender;
@@ -94,6 +105,9 @@ int main(int /*argc*/, char** /*argv*/)
     printf("after disconnect\n");
     s->notify();
     
+	//请看如下这段代码，这里解释了为什么Sender和Receiver需要继承于GObject。
+	//Receiver对象被销毁后，Sender对象与Receiver对象之间的依赖会自动被解除。
+	//事实上，如果你根本不在意Receiver被销毁后的情形，那么你当然可以不用继承于GObject。
     printf("re-connected, but delete receiver\n");
     GObject::connect(s, s->selected, r, &Receiver::slotSelected);
     delete r;
