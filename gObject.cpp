@@ -258,6 +258,7 @@ GObject::GObject ( const GObject& /*src*/ )
     :m_priv ( new GObjectPrivate ( NULL, "" ) )
 {
 }
+
 void GSlot::operator() ( const GSlot& ) 
 {
     printf("\n");
