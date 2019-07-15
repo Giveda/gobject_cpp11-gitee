@@ -32,6 +32,7 @@
  * @brief Receiver类负责接收信号；并进行业务处理。
  * 通常情况下，一个文件应当只包含一个类，应当由一个名为receiver.cpp/receiver.h的文件来放置Receiver类。
  * receiver.cpp/receiver.h不需要include(依赖)Sender.h。
+ * 请看main函数中的测试代码，测试代码解释了为什么Receiver需要继承于GObject。
  *
  */
 class Receiver : public GObject
@@ -59,6 +60,7 @@ public slots:
  * @brief Sender类负责定义信号；并负责在需要时，发射信号。
  * 通常情况下，一个文件应当只包含一个类，应当由一个名为sender.cpp/sender.h的文件来放置Sender类。
  * sender.cpp/sender.h不需要include(依赖)receiver.h。
+ * 请看main函数中的测试代码，测试代码解释了为什么Sender和Receiver需要继承于GObject。
  */
 class Sender  : public GObject
 {
