@@ -1,18 +1,18 @@
 /*
  * Copyright (C) 2019  明心  <imleizhang@qq.com>
  * All rights reserved.
- * 
- * This program is an open-source software; and it is distributed in the hope 
+ *
+ * This program is an open-source software; and it is distributed in the hope
  * that it will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR 
- * PURPOSE. 
- * This program is not a free software; so you can not redistribute it and/or 
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.
+ * This program is not a free software; so you can not redistribute it and/or
  * modify it without my authorization. If you only need use it for personal
- * study purpose(no redistribution, and without any  commercial behavior), 
+ * study purpose(no redistribution, and without any  commercial behavior),
  * you should accept and follow the GNU AGPL v3 license, otherwise there
- * will be your's credit and legal risks.  And if you need use it for any 
+ * will be your's credit and legal risks.  And if you need use it for any
  * commercial purpose, you should first get commercial authorization from
- * me, otherwise there will be your's credit and legal risks. 
+ * me, otherwise there will be your's credit and legal risks.
  *
  */
 
@@ -40,18 +40,18 @@ class Receiver : public GObject
 public:
     Receiver ( )
     {}
-    
+
 public slots:
     /**
      * @brief 接收sender发射的selected信号、并进行业务处理
-     * 
+     *
      * @param const string& selected信号传递过来的参数
      * @param int    selected信号传递过来的参数
      * @return void
      */
-    void  slotSelected( const string& str, int idx)
+    void  slotSelected ( const string& str, int idx )
     {
-        printf("param=[%s, %d]\n", str.c_str(), idx );
+        printf ( "param=[%s, %d]\n", str.c_str(), idx );
     }
 };
 
@@ -69,20 +69,20 @@ public:
      * 定义一个名称为selected的信号；该信号接收两个参数，参数类型分别为const string&和int
      */
     GSignal<const string&, int> selected;
-    
+
 public:
     /**
      * @brief 发射信号
-     * 
+     *
      * @return void
      */
     void notify()
     {
-        string a("giveda.com");
-        selected(a, 3);
+        string a ( "giveda.com" );
+        selected ( a, 3 );
 
         a = "Hello, Giveda!";
-        selected.emit(a, 6);
+        selected.emit ( a, 6 );
     }
 };
 
@@ -92,29 +92,28 @@ public:
  * main.cpp需要include(依赖)Sender.h和Receiver.h。
  *
  */
-int main(int /*argc*/, char** /*argv*/)
+int main ( int /*argc*/, char** /*argv*/ )
 {
     Sender *s = new Sender;
     s->notify();
-    printf("before connect\n");
-    
+    printf ( "before connect\n" );
+
     Receiver *r = new Receiver;
-    GObject::connect(s, s->selected, r, &Receiver::slotSelected);
-    printf("after connect\n");
+    GObject::connect ( s, s->selected, r, &Receiver::slotSelected );
+    printf ( "after connect\n" );
     s->notify();
-    
-    GObject::disconnect(s, s->selected, r, &Receiver::slotSelected);
-    printf("after disconnect\n");
+
+    GObject::disconnect ( s, s->selected, r, &Receiver::slotSelected );
+    printf ( "after disconnect\n" );
     s->notify();
-    
-	//请看如下这段代码，这里解释了为什么Sender和Receiver需要继承于GObject。
-	//Receiver对象被销毁后，Sender对象与Receiver对象之间的依赖会自动被解除。
-	//事实上，如果你根本不在意Receiver被销毁后的情形，那么你当然可以不用继承于GObject。
-    printf("re-connected, but delete receiver\n");
-    GObject::connect(s, s->selected, r, &Receiver::slotSelected);
+
+    //请看如下这段代码，这里解释了为什么Sender和Receiver需要继承于GObject。
+    //Receiver对象被销毁后，Sender对象与Receiver对象之间的依赖会自动被解除。
+    //事实上，如果你根本不在意Receiver被销毁后的情形，那么你当然可以不用继承于GObject。
+    printf ( "re-connected, but delete receiver\n" );
+    GObject::connect ( s, s->selected, r, &Receiver::slotSelected );
     delete r;
     s->notify();
-    
+
     return 0;
 }
-
