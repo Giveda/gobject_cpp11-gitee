@@ -1,19 +1,22 @@
 /*
  * Copyright (C) 2019  明心  <imleizhang@qq.com>
  * All rights reserved.
- *
- * This program is an open-source software; and it is distributed in the hope
+ * 
+ * This program is an open-source software; and it is distributed in the hope 
  * that it will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.
- * This program is not a free software; so you can not redistribute it(include
- * binary form and source code form) without my authorization. And if you
- * need use it for any commercial purpose, you should first get commercial
- * authorization from me, otherwise there will be your's legal&credit risks.
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR 
+ * PURPOSE. 
+ * This program is not a free software; so you can not redistribute it and/or 
+ * modify it without my authorization. If you only need use it for personal
+ * study purpose(no redistribution, and without any  commercial behavior), 
+ * you should accept and follow the GNU AGPL v3 license, otherwise there
+ * will be your's credit and legal risks.  And if you need use it for any 
+ * commercial purpose, you should first get commercial authorization from
+ * me, otherwise there will be your's credit and legal risks. 
  *
  */
 
-#include <gObject.h>
+#include "gObject.h"
 #include <string>
 #include <algorithm>
 
@@ -21,8 +24,7 @@ struct SenderPair
 {
     SenderPair(GObject* _sender, SIGNAL_POINTER(void*) _signal )
         :sender(_sender), signal(_signal)
-    {
-	}
+    { }
 
     bool operator==(const SenderPair &r ) const
     {
@@ -63,7 +65,7 @@ GObject::~GObject()
 {
     destructAsReceiver();
 
-    sigDestroyed(this);
+    sigDestroyed();
     destructAsSender();
     
     delete m_priv;
@@ -219,8 +221,15 @@ int GObject::privDisconnect(GObject* sender, SIGNAL_POINTER(void*) signal, GObje
                   slot );
         return -1;
     }
+
+#ifdef WIN32
+	GSlot *vslot = (GSlot*)slot;
+	SIGNAL_TYPE_ITERATOR(void*) it = std::find_if(signal->begin(), signal->end(), Slot_Is_CppSlot(*vslot));
+#else
+	SIGNAL_TYPE_ITERATOR(void*) it = std::find_if(signal->begin(), signal->end(), Slot_Is_CppSlot(GSlot(slot, receiver, CPP_SLOT_TYPE)));
+#endif // WIN32
+
     
-    SIGNAL_TYPE_ITERATOR(void*) it = std::find_if ( signal->begin(), signal->end(),  Slot_Is_CppSlot( GSlot( slot, receiver, CPP_SLOT_TYPE) ) );
     if(it == signal->end() )
     {
         return -2;
@@ -255,7 +264,6 @@ GObject::GObject ( const GObject& /*src*/ )
     :m_priv ( new GObjectPrivate ( NULL, "" ) )
 {
 }
-
 void GSlot::operator() ( const GSlot& ) 
 {
     printf("\n");
