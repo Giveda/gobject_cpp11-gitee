@@ -137,9 +137,9 @@ public:
      */
     void emit ( Args... args )
     {
-        for ( auto it = _slotLst.begin(); it != _slotLst.end(); ++it )
+        for ( auto it : _slotLst )
         {
-            ( * ( *it ) ) ( args... );
+            ( *it ) ( args... );
         }
     }
 
@@ -151,9 +151,9 @@ public:
      */
     void operator() ( Args... args )
     {
-        for ( auto it = _slotLst.begin(); it != _slotLst.end(); ++it )
+        for ( auto it : _slotLst  )
         {
-            ( * ( *it ) ) ( args... );
+            ( *it ) ( args... );
         }
     }
 
