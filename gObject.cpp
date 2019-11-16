@@ -19,7 +19,7 @@
 
 struct SenderPair
 {
-    SenderPair(GObject* _sender, SIGNAL_POINTER(void*) _signal )
+    SenderPair(GObject* _sender, SIGNAL_POINTER _signal )
         :sender(_sender), signal(_signal)
     {
 	}
@@ -30,7 +30,7 @@ struct SenderPair
     }
 
     GObject* sender;
-    SIGNAL_POINTER(void*) signal;
+    SIGNAL_POINTER signal;
 };
 
 class GObjectPrivate
@@ -69,13 +69,13 @@ GObject::~GObject()
     delete m_priv;
 }
 
-void GObject::saveSenderPair(GObject* sender, SIGNAL_POINTER(void*) signal)
+void GObject::saveSenderPair(GObject* sender, SIGNAL_POINTER signal)
 {
     SenderPair sp(sender, signal);
     m_priv->spLst.push_back(sp);
 }
 
-void GObject::deleteSenderPair(GObject* sender, SIGNAL_POINTER(void*) signal)
+void GObject::deleteSenderPair(GObject* sender, SIGNAL_POINTER signal)
 {
     m_priv->spLst.remove( SenderPair(sender, signal) );
 }
@@ -124,7 +124,7 @@ public:
     }
 };
 
-int GObject::privConnect(GObject* sender, SIGNAL_POINTER(void*) signal, GObject* receiver, void* slot)
+int GObject::privConnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot)
 {
     if ( sender == 0 || receiver == 0 || signal == 0 || slot == 0 )
     {
@@ -137,7 +137,7 @@ int GObject::privConnect(GObject* sender, SIGNAL_POINTER(void*) signal, GObject*
     }
     
     GSlot *vslot = (GSlot*)slot;
-    SIGNAL_TYPE_ITERATOR(void*) it = std::find_if ( signal->begin(), signal->end(),  Slot_Is_CppSlot( *vslot ) );
+    SIGNAL_TYPE_ITERATOR it = std::find_if ( signal->begin(), signal->end(),  Slot_Is_CppSlot( *vslot ) );
     if(it != signal->end() )
     {
         printf("already connected\n");
@@ -208,7 +208,7 @@ void GObject::deleteReceiver(GObject *receiver)
     m_priv->rLst.erase(it);
 }
 
-int GObject::privDisconnect(GObject* sender, SIGNAL_POINTER(void*) signal, GObject* receiver, void* slot)
+int GObject::privDisconnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot)
 {
     if ( sender == 0 || receiver == 0 || signal == 0 || slot == 0 )
     {
@@ -220,7 +220,7 @@ int GObject::privDisconnect(GObject* sender, SIGNAL_POINTER(void*) signal, GObje
         return -1;
     }
     
-    SIGNAL_TYPE_ITERATOR(void*) it = std::find_if ( signal->begin(), signal->end(),  Slot_Is_CppSlot( GSlot( slot, receiver, CPP_SLOT_TYPE) ) );
+    SIGNAL_TYPE_ITERATOR it = std::find_if ( signal->begin(), signal->end(),  Slot_Is_CppSlot( GSlot( slot, receiver, CPP_SLOT_TYPE) ) );
     if(it == signal->end() )
     {
         return -2;
