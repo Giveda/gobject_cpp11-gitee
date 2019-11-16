@@ -200,9 +200,9 @@ private:
     E_SLOT_TYPE m_type;
 };
 
-#define SIGNAL_TYPE  list<GSlot*>
-#define SIGNAL_POINTER  list<GSlot*>*
-#define SIGNAL_TYPE_ITERATOR  list<GSlot*>::iterator
+#define SIGNAL_TYPE(SlotFuncType)  list<GSlot*>
+#define SIGNAL_POINTER(SlotFuncType)  list<GSlot*>*
+#define SIGNAL_TYPE_ITERATOR(SlotFuncType)  list<GSlot*>::iterator
 
 #define signals public
 
@@ -255,10 +255,10 @@ public:
 
 
 private:
-    static int  privConnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot);
-    static int  privDisconnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot);
-    void saveSenderPair(GObject* sender, SIGNAL_POINTER signal);
-    void deleteSenderPair(GObject* sender, SIGNAL_POINTER signal);
+    static int  privConnect(GObject* sender, SIGNAL_POINTER(void*) signal, GObject* receiver, void* slot);
+    static int  privDisconnect(GObject* sender, SIGNAL_POINTER(void*) signal, GObject* receiver, void* slot);
+    void saveSenderPair(GObject* sender, SIGNAL_POINTER(void*) signal);
+    void deleteSenderPair(GObject* sender, SIGNAL_POINTER(void*) signal);
     void destructAsReceiver();
     void destructAsSender();
     void saveReceiver ( GObject* receiver );
@@ -269,7 +269,7 @@ template<class Receiver, typename ...Args>
 int  GObject::connect ( GObject* sender, GSignal<Args...>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) )
 {
     GSlotCpp<Receiver, Args...> *vslot = new GSlotCpp<Receiver, Args...>(receiver, SlotFunc);
-    int ret = privConnect(sender, reinterpret_cast<SIGNAL_POINTER>(&(signal._slotLst)), (GObject*)receiver, (void*)vslot);
+    int ret = privConnect(sender, reinterpret_cast<SIGNAL_POINTER(void*)>(&(signal._slotLst)), (GObject*)receiver, (void*)vslot);
     if(0 != ret)
     {
         delete vslot;
@@ -280,7 +280,7 @@ int  GObject::connect ( GObject* sender, GSignal<Args...>& signal, Receiver* rec
 template<class Receiver, typename ...Args>
 int  GObject::disconnect ( GObject* sender, GSignal<Args...>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) )
 {
-    int ret = privDisconnect(sender, reinterpret_cast<SIGNAL_POINTER>(&(signal._slotLst)), (GObject*)receiver, (void*)SlotFunc);
+    int ret = privDisconnect(sender, reinterpret_cast<SIGNAL_POINTER(void*)>(&(signal._slotLst)), (GObject*)receiver, (void*)SlotFunc);
     return ret;
 }
 
