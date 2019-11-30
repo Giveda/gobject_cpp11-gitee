@@ -14,10 +14,9 @@
  */
 
 #include <gObject.h>
-#include <string>
+#include <gPointer.h>
 
-using namespace Giveda;
-using namespace std;
+#include <string>
 
 /**
  * @mainpage 基于c++11实现的信号和槽
@@ -106,12 +105,21 @@ int main ( int /*argc*/, char** /*argv*/ )
     s->notify();
 
     printf ( "re-connected, but delete receiver\n" );
-    GObject::connect ( s, s->selected, r, &Receiver::slotSelected );
-    GObject::connect ( s, s->clicked, r, &Receiver::slotClicked );
+    GPointer<Sender> pSender = s;
+    GObject::connect ( pSender, pSender->selected, r, &Receiver::slotSelected );
+    GObject::connect ( pSender, pSender->clicked, r, &Receiver::slotClicked );
     delete r;
-    s->notify();
+    pSender->notify();
 
-    delete s;
+    delete pSender;
+    if ( pSender )
+    {
+        pSender->notify();
+    }
+    else
+    {
+        printf ( "sender has been destoried, GPointer is so powerful!\n" );
+    }
 
     return 0;
 }
