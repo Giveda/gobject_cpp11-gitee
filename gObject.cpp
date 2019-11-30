@@ -6,10 +6,10 @@
  * that it will be useful, but WITHOUT ANY WARRANTY; without even the
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
  * PURPOSE.
- * This program is not a free software; so you can not redistribute it and/or
- * modify it without my authorization. If you need use it for any
- * commercial purpose, you should first get commercial authorization from
- * me, otherwise there will be your's credit and legal risks.
+ * This program is not a free software; so you can not redistribute it(include
+ * binary form and source code form) without my authorization. And if you
+ * need use it for any commercial purpose, you should first get commercial
+ * authorization from me, otherwise there will be your's legal&credit risks.
  *
  */
 
@@ -19,23 +19,24 @@
 
 struct SenderPair
 {
-    SenderPair ( GObject* _sender, SIGNAL_POINTER ( void* ) _signal )
-        :sender ( _sender ), signal ( _signal )
-    { }
+    SenderPair(GObject* _sender, SIGNAL_POINTER _signal )
+        :sender(_sender), signal(_signal)
+    {
+	}
 
-    bool operator== ( const SenderPair &r ) const
+    bool operator==(const SenderPair &r ) const
     {
         return r.sender == sender && r.signal == signal;
     }
 
     GObject* sender;
-    SIGNAL_POINTER ( void* ) signal;
+    SIGNAL_POINTER signal;
 };
 
 class GObjectPrivate
 {
 public:
-    GObjectPrivate ( GObject *p, const char* nm ) :m_parent ( p ), strName ( nm )
+    GObjectPrivate ( GObject *p, const char* nm ) :m_parent ( p ), strName ( nm ) 
     {
         spLst.clear();
         rLst.clear();
@@ -62,21 +63,21 @@ GObject::~GObject()
 {
     destructAsReceiver();
 
-    sigDestroyed();
+    sigDestroyed(this);
     destructAsSender();
-
+    
     delete m_priv;
 }
 
-void GObject::saveSenderPair ( GObject* sender, SIGNAL_POINTER ( void* ) signal )
+void GObject::saveSenderPair(GObject* sender, SIGNAL_POINTER signal)
 {
-    SenderPair sp ( sender, signal );
-    m_priv->spLst.push_back ( sp );
+    SenderPair sp(sender, signal);
+    m_priv->spLst.push_back(sp);
 }
 
-void GObject::deleteSenderPair ( GObject* sender, SIGNAL_POINTER ( void* ) signal )
+void GObject::deleteSenderPair(GObject* sender, SIGNAL_POINTER signal)
 {
-    m_priv->spLst.remove ( SenderPair ( sender, signal ) );
+    m_priv->spLst.remove( SenderPair(sender, signal) );
 }
 
 class Receiver_Is
@@ -94,8 +95,8 @@ public:
         return this->receiver == receiver;
     }
 
-    Receiver_Is ( GObject* r )
-        :receiver ( r )
+    Receiver_Is(GObject* r)
+        :receiver(r)
     {
 
     }
@@ -105,49 +106,49 @@ class Slot_Is_CppSlot
 {
 private:
     GSlot vslot;
-
+    
 public:
     bool operator( ) ( GSlot* &obj1 )
     {
-        if ( obj1->type() != CPP_SLOT_TYPE )
+        if(obj1->type() != CPP_SLOT_TYPE)
         {
             return false;
         }
-
+        
         return vslot == *obj1;
     }
-
-    Slot_Is_CppSlot ( const GSlot& s )
-        :vslot ( s )
+    
+    Slot_Is_CppSlot( const GSlot& s )
+    :vslot(s)
     {
     }
 };
 
-int GObject::privConnect ( GObject* sender, SIGNAL_POINTER ( void* ) signal, GObject* receiver, void* slot )
+int GObject::privConnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot)
 {
     if ( sender == 0 || receiver == 0 || signal == 0 || slot == 0 )
     {
         printf ( "can not connect %s::%p to %s::%p\n",
-                 sender ? sender->name() : "(null)",
-                 signal,
-                 receiver ? receiver->name() : "(null)",
-                 slot );
+                  sender ? sender->name() : "(null)",
+                  signal,
+                  receiver ? receiver->name() : "(null)",
+                  slot );
         return -1;
     }
-
-    GSlot *vslot = ( GSlot* ) slot;
-    SIGNAL_TYPE_ITERATOR ( void* ) it = std::find_if ( signal->begin(), signal->end(),  Slot_Is_CppSlot ( *vslot ) );
-    if ( it != signal->end() )
+    
+    GSlot *vslot = (GSlot*)slot;
+    SIGNAL_TYPE_ITERATOR it = std::find_if ( signal->begin(), signal->end(),  Slot_Is_CppSlot( *vslot ) );
+    if(it != signal->end() )
     {
-        printf ( "already connected\n" );
+        printf("already connected\n");
         return -2;
     }
 
-    signal->push_back ( vslot );
+    signal->push_back( vslot );
 
-    sender->saveReceiver ( receiver );
-
-    receiver->saveSenderPair ( sender, signal );
+    sender->saveReceiver(receiver);
+    
+    receiver->saveSenderPair( sender, signal );
 
     return 0;
 }
@@ -155,10 +156,10 @@ int GObject::privConnect ( GObject* sender, SIGNAL_POINTER ( void* ) signal, GOb
 void GObject::destructAsReceiver()
 {
     list<SenderPair >::iterator it = m_priv->spLst.begin();
-    while ( it != m_priv->spLst.end() )
+    while(it != m_priv->spLst.end() )
     {
-        it->signal->remove_if ( Receiver_Is ( this ) );
-        it->sender->m_priv->rLst.remove_if ( Receiver_Is ( this ) );
+        it->signal->remove_if( Receiver_Is(this) );
+        it->sender->m_priv->rLst.remove_if( Receiver_Is(this) );
         ++it;
     }
 }
@@ -173,8 +174,8 @@ public:
         return obj1.sender == sender;
     }
 
-    Sender_Is ( GObject* s )
-        :sender ( s )
+    Sender_Is(GObject* s)
+        :sender(s)
     {
 
     }
@@ -183,53 +184,53 @@ public:
 void GObject::destructAsSender()
 {
     list<GObject*>::iterator it = m_priv->rLst.begin();
-    while ( it != m_priv->rLst.end() )
+    while(it != m_priv->rLst.end() )
     {
         GObject* receiver = *it;
-        receiver->m_priv->spLst.remove_if ( Sender_Is ( this ) );
+        receiver->m_priv->spLst.remove_if( Sender_Is(this) );
         ++it;
     }
 }
 
-void GObject::saveReceiver ( GObject *receiver )
+void GObject::saveReceiver(GObject *receiver)
 {
-    m_priv->rLst.push_front ( receiver );
+    m_priv->rLst.push_front( receiver );
 }
 
-void GObject::deleteReceiver ( GObject *receiver )
+void GObject::deleteReceiver(GObject *receiver)
 {
-    list<GObject*>::iterator it = std::find ( m_priv->rLst.begin(), m_priv->rLst.end(), receiver );
-    if ( it == m_priv->rLst.end() )
+    list<GObject*>::iterator it = std::find(m_priv->rLst.begin(), m_priv->rLst.end(), receiver );
+    if(it == m_priv->rLst.end() )
     {
         return ;
     }
 
-    m_priv->rLst.erase ( it );
+    m_priv->rLst.erase(it);
 }
 
-int GObject::privDisconnect ( GObject* sender, SIGNAL_POINTER ( void* ) signal, GObject* receiver, void* slot )
+int GObject::privDisconnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot)
 {
     if ( sender == 0 || receiver == 0 || signal == 0 || slot == 0 )
     {
         printf ( "can not disconnect sender %s::%p from receiver %s::%p\n",
-                 sender ? sender->name() : "(null)",
-                 signal,
-                 receiver ? receiver->name() : "(null)",
-                 slot );
+                  sender ? sender->name() : "(null)",
+                  signal,
+                  receiver ? receiver->name() : "(null)",
+                  slot );
         return -1;
     }
-
-    SIGNAL_TYPE_ITERATOR ( void* ) it = std::find_if ( signal->begin(), signal->end(),  Slot_Is_CppSlot ( GSlot ( slot, receiver, CPP_SLOT_TYPE ) ) );
-    if ( it == signal->end() )
+    
+    SIGNAL_TYPE_ITERATOR it = std::find_if ( signal->begin(), signal->end(),  Slot_Is_CppSlot( GSlot( slot, receiver, CPP_SLOT_TYPE) ) );
+    if(it == signal->end() )
     {
         return -2;
     }
 
-    signal->erase ( it );
+    signal->erase( it );
 
-    sender->deleteReceiver ( receiver );
-
-    receiver->deleteSenderPair ( sender, signal );
+    sender->deleteReceiver(receiver);
+    
+    receiver->deleteSenderPair( sender, signal );
 
     return 0;
 }
@@ -254,7 +255,8 @@ GObject::GObject ( const GObject& /*src*/ )
     :m_priv ( new GObjectPrivate ( NULL, "" ) )
 {
 }
-void GSlot::operator() ( const GSlot& )
+
+void GSlot::operator() ( const GSlot& ) 
 {
-    printf ( "\n" );
+    printf("\n");
 }
