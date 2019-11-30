@@ -16,6 +16,9 @@
 #include <gObject.h>
 #include <string>
 
+using namespace Giveda;
+using namespace std;
+
 /**
  * @mainpage 基于c++11实现的信号和槽
  * @author 明心(imleizhang\@qq.com)

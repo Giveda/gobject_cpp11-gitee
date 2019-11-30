@@ -1,17 +1,21 @@
 /*
  * Copyright (C) 2019  明心  <imleizhang@qq.com>
  * All rights reserved.
- *
- * This program is an open-source software; and it is distributed in the hope
+ * 
+ * This program is an open-source software; and it is distributed in the hope 
  * that it will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.
- * This program is not a free software; so you can not redistribute it and/or
- * modify it without my authorization. If you need use it for any
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR 
+ * PURPOSE. 
+ * This program is not a free software; so you can not redistribute it and/or 
+ * modify it without my authorization. If you only need use it for personal
+ * study purpose(no redistribution, and without any  commercial behavior), 
+ * you should accept and follow the GNU AGPL v3 license, otherwise there
+ * will be your's credit and legal risks.  And if you need use it for any 
  * commercial purpose, you should first get commercial authorization from
- * me, otherwise there will be your's credit and legal risks.
+ * me, otherwise there will be your's credit and legal risks. 
  *
  */
+
 
 #ifndef GOBJECT_H
 #define GOBJECT_H
@@ -19,288 +23,135 @@
 #include <list>
 #include <stdio.h>
 
-using namespace std;
+#define slots
+#define signals public
+#define emit
 
+namespace Giveda
+{
 class GObjectPrivate;
 class GObject;
-
-#define slots
-
-enum E_SLOT_TYPE
-{
-    C_SLOT_TYPE,
-    CPP_SLOT_TYPE,
-};
-
-template<typename F>
+template<typename T>
 class GSlotAPI;
-template<typename Ret, typename ...Args>
-class  GSlotAPI<Ret ( Args... ) >
-{
-public:
-    E_SLOT_TYPE type() const
-    {
-        return m_type;
-    }
-
-public:
-    explicit GSlotAPI ( void* slot, GObject* receiver=NULL, E_SLOT_TYPE t=C_SLOT_TYPE )
-        :m_receiver ( receiver ),
-         m_slot ( slot ),
-         m_type ( t )
-    {
-    }
-    virtual ~GSlotAPI() {}
-    virtual void operator() ( Args&... args ) = 0;
-
-private:
-    GSlotAPI &operator= ( const GSlotAPI & ) = delete;
-
-public:
-    bool operator== ( const GSlotAPI& other )
-    {
-        return other.m_type == m_type
-               && other.m_slot == m_slot
-               && other.m_receiver == m_receiver ;
-    }
-
-public:
-    GObject* m_receiver;
-    void* m_slot;
-
-private:
-    E_SLOT_TYPE m_type;
-};
-
-template<typename F>
-class GSlotC;
-template<typename Ret, typename ...Args>
-class GSlotC<Ret ( Args... ) > : public GSlotAPI<Ret ( Args... ) >
-{
-public:
-    typedef void ( *SlotFuncType ) ( Args... );
-
-public:
-    GSlotC ( SlotFuncType slot )
-        : GSlotAPI<Ret ( Args... ) > ( ( void* ) slot, ( GObject* ) NULL, C_SLOT_TYPE )
-    {
-    }
-    virtual ~GSlotC() {}
-
-public:
-    void operator() ( Args&... args )
-    {
-        ( ( SlotFuncType ) GSlotAPI<Args...>::m_slot ) ( args... );
-    }
-};
-
-template<typename Receiver, typename F>
+template<typename GReceiver, typename GRet>
 class GSlotCpp;
-template<typename Receiver, typename Ret, typename ...Args>
-class GSlotCpp<Receiver, Ret ( Args... ) > : public GSlotAPI<Ret ( Args... ) >
+template<typename T>
+class GSignal;
+
+template<typename GRet, typename ...GArgs>
+class  GSlotAPI<GRet ( GArgs... ) >
 {
 public:
-    typedef void ( Receiver::*SlotFuncType ) ( Args... );
-
-    GSlotCpp ( Receiver* r, SlotFuncType slot )
-        : GSlotAPI<Ret ( Args... ) > ( ( void* ) slot, ( GObject* ) r, CPP_SLOT_TYPE ),
-          m_class_slot ( slot )
+    explicit GSlotAPI ( void* slot, GObject* receiver = nullptr )
+        :m_receiver ( receiver ),m_slot ( slot ) {}
+    GObject* getReceiver()
     {
+        return m_receiver;
     }
+    virtual void operator() ( GArgs&... args ) = 0;
 
-    virtual ~GSlotCpp() {}
+private:
+    void* m_slot;
+    GObject* m_receiver;
+    friend class GObject;
+};
+
+template<typename GReceiver, typename GRet, typename ...GArgs>
+class GSlotCpp<GReceiver, GRet ( GArgs... ) > : public GSlotAPI<GRet ( GArgs... ) >
+{
+public:
+    typedef void ( GReceiver::* GSlotPtr ) ( GArgs... );
+
+    GSlotCpp ( GReceiver* receiver, GSlotPtr slot ) : GSlotAPI<GRet ( GArgs... ) > ( ( void* ) &slot, ( GObject* ) receiver ),
+        m_slotfunc ( slot ) {}
 
 public:
-    void operator() ( Args&... args )
+    void operator() ( GArgs&... args )
     {
-        ( ( ( Receiver* ) GSlotAPI<Ret ( Args... ) >::m_receiver )->*m_class_slot ) ( args... );
+        ( ( ( GReceiver* ) GSlotAPI<GRet ( GArgs... ) >::getReceiver() )->*m_slotfunc ) ( args... );
     }
 
 private:
-    SlotFuncType m_class_slot;
+    GSlotPtr m_slotfunc;
+    friend class GObject;
 };
 
-/**
- * @class GSignal
- * @brief  GSignal 类用来定义信号，所述信号的函数类型为Ret (*)(Args...)。\n
- * 比如：GSignal<void(int)> intSig;//定义一个函数类型为void intSig(int);
- * 比如：GSignal<void(int, float)> ifSig;//定义一个函数类型为void ifSig(int,  float);
- *
- */
-template<typename F>
-class GSignal;
-template<typename Ret, typename... Args>
-class GSignal<Ret ( Args... ) >
+template<typename GRet, typename... GArgs>
+class  GSignal<GRet ( GArgs... ) >
 {
 public:
-    typedef list<GSlotAPI<Ret ( Args... ) >* > SlotLstType;
-
-public:
-    /**
-     * @brief 发射信号
-     *
-     * @param args  参数列表
-     * @return void
-     */
-    void emit ( Args... args )
+    void operator() ( GArgs... args )
     {
-        for ( auto it = _slotLst.begin(); it != _slotLst.end(); ++it )
-        {
-            ( * ( *it ) ) ( args... );
-        }
+        for ( auto iter = _slots.begin(); iter != _slots.end(); ++iter )
+            ( **iter ) ( args... );
     }
-
-    /**
-     * @brief 发射信号
-     *
-     * @param args  参数列表
-     * @return void
-     */
-    void operator() ( Args... args )
+    ~GSignal()
     {
-        for ( auto it = _slotLst.begin(); it != _slotLst.end(); ++it )
-        {
-            ( * ( *it ) ) ( args... );
-        }
+        for ( auto _slot : _slots )
+            delete _slot;
     }
-
-public:
-    SlotLstType  _slotLst;
+private:
+    std::list<GSlotAPI<GRet ( GArgs... ) >* >  _slots;
+    friend class GObject;
 };
-
 
 class  GSlot
 {
 public:
-    E_SLOT_TYPE type() const
-    {
-        return m_type;
-    }
-
-public:
-    explicit GSlot ( void* slot, GObject* receiver=NULL, E_SLOT_TYPE t=C_SLOT_TYPE )
-        :m_receiver ( receiver ),
-         m_slot ( slot ),
-         m_type ( t )
-    {
-    }
-    virtual ~GSlot() {}
-    virtual void operator() ( const GSlot& );
-
-private:
-    GSlot &operator= ( const GSlot & ) = delete;
-
+    explicit GSlot ( void* slot, GObject* receiver = nullptr )
+        :m_slot ( slot ),
+        m_receiver ( receiver ) {}
 public:
     bool operator== ( const GSlot& other )
     {
-        return other.m_type == m_type
-               && other.m_slot == m_slot
-               && other.m_receiver == m_receiver ;
+        return ( other.m_slot == m_slot ) && ( other.m_receiver == m_receiver );
     }
 
-public:
-    GObject* m_receiver;
-protected:
-    void* m_slot;
-
 private:
-    E_SLOT_TYPE m_type;
+    void* m_slot;
+    GObject* m_receiver;
+
+    friend class GObject;
+    friend class GReceiverFind;
 };
 
-#define SIGNAL_TYPE(SlotFuncType)  list<GSlot*>
-#define SIGNAL_POINTER(SlotFuncType)  list<GSlot*>*
-#define SIGNAL_TYPE_ITERATOR(SlotFuncType)  list<GSlot*>::iterator
-
-#define signals public
-
-class  GObject
+class GObject
 {
-signals:
-    ///当对象被析构时，会发射此信号
-    GSignal<void ( void ) > sigDestroyed;
-
-private:
-    GObjectPrivate *m_priv;
-
 public:
-    explicit GObject ( GObject *parent=NULL,  const char *name=NULL );
-    GObject ( const GObject & src );
-    GObject & operator= ( const GObject & src );
+    explicit GObject();
     virtual ~GObject();
 
-    /**
-     * @brief 将信号和槽建立连接。\n
-     * Receiver代表接收者的类型
-     * Args是槽函数/信号的参数列表。
-     *
-     * @param sender 指向发射者的指针
-     * @param signal 指向信号的引用。
-     * @param receiver 指向接收者的指针
-     * @param SlotFunc 指向槽函数的指针
-     *
-     * @return 0代表成功；非0代表失败
-     */
-    template<class Receiver, typename ...Args>
-    static int  connect ( GObject* sender, GSignal<void ( Args... ) >& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) );
+    template<class GReceiver, typename ...GArgs>
+    static bool  connect ( GObject* sender, GSignal<void ( GArgs... ) >& signal, GReceiver* receiver, void ( GReceiver::* SlotFunc ) ( GArgs... ) );
 
-    /**
-     * @brief 将信号和槽断开连接。\n
-     * Receiver代表接收者的类型
-     * Args是槽函数/信号的参数列表。
-     *
-     * @param sender 指向发射者的指针
-     * @param signal 指向信号的引用。
-     * @param receiver 指向接收者的指针
-     * @param SlotFunc 指向槽函数的指针
-     *
-     * @return 0代表成功；非0代表失败
-     */
-    template<class Receiver, typename ...Args>
-    static int  disconnect ( GObject* sender, GSignal<void ( Args... ) >& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) );
-
-    /**
-     * @brief 获取对象名称
-     *
-     * @return const char*
-     */
-    const char *name() const;
-
-    /**
-     * @brief 获取对象的parent
-     *
-     * @return GObject*
-     */
-    GObject *parent() const;
-
+    template<class GReceiver, typename ...GArgs>
+    static bool  disconnect ( GObject* sender, GSignal<void ( GArgs... ) >& signal, GReceiver* receiver, void ( GReceiver::* SlotFunc ) ( GArgs... ) );
 
 private:
-    static int  privConnect ( GObject* sender, SIGNAL_POINTER ( void* ) signal, GObject* receiver, void* slot );
-    static int  privDisconnect ( GObject* sender, SIGNAL_POINTER ( void* ) signal, GObject* receiver, void* slot );
-    void saveSenderPair ( GObject* sender, SIGNAL_POINTER ( void* ) signal );
-    void deleteSenderPair ( GObject* sender, SIGNAL_POINTER ( void* ) signal );
-    void destructAsReceiver();
-    void destructAsSender();
-    void saveReceiver ( GObject* receiver );
-    void deleteReceiver ( GObject* receiver );
+    static bool  __connect ( GObject* sender, std::list<GSlot*>* signal, GObject* receiver, void* slot );
+    static bool  __disconnect ( GObject* sender, std::list<GSlot*>* signal, GObject* receiver, void* slot );
+    void pushSignal ( GObject* sender, std::list<GSlot*>* signal );
+    void freeSignal ( GObject* sender, std::list<GSlot*>* signal );
+    void pushSlot ( GObject* receiver );
+    void freeSlot ( GObject* receiver );
+    void release();
+
+private:
+    GObjectPrivate* m_private;
 };
 
-template<class Receiver, typename ...Args>
-int  GObject::connect ( GObject* sender, GSignal<void ( Args... ) >& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) )
+template<class GReceiver, typename ...GArgs>
+bool  GObject::connect ( GObject* sender, GSignal<void ( GArgs... ) >& signal, GReceiver* receiver, void ( GReceiver::* SlotFunc ) ( GArgs... ) )
 {
-    GSlotCpp<Receiver, void ( Args... ) > *vslot = new GSlotCpp<Receiver, void ( Args... ) > ( receiver, SlotFunc );
-    int ret = privConnect ( sender, reinterpret_cast<SIGNAL_POINTER ( void* ) > ( & ( signal._slotLst ) ), ( GObject* ) receiver, ( void* ) vslot );
-    if ( 0 != ret )
-    {
-        delete vslot;
-    }
-    return ret;
+    GSlotCpp<GReceiver, void ( GArgs... ) >* _slotfunc = new GSlotCpp<GReceiver, void ( GArgs... ) > ( receiver, SlotFunc );
+    return __connect ( sender, reinterpret_cast<std::list<GSlot*>*> ( & ( signal._slots ) ), ( GObject* ) receiver, ( void* ) _slotfunc );
 }
 
-template<class Receiver, typename ...Args>
-int  GObject::disconnect ( GObject* sender, GSignal<void ( Args... ) >& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) )
+template<class GReceiver, typename ...GArgs>
+bool  GObject::disconnect ( GObject* sender, GSignal<void ( GArgs... ) >& signal, GReceiver* receiver, void ( GReceiver::* SlotFunc ) ( GArgs... ) )
 {
-    int ret = privDisconnect ( sender, reinterpret_cast<SIGNAL_POINTER ( void* ) > ( & ( signal._slotLst ) ), ( GObject* ) receiver, ( void* ) SlotFunc );
-    return ret;
+    return __disconnect ( sender, reinterpret_cast<std::list<GSlot*>*> ( & ( signal._slots ) ), ( GObject* ) receiver, ( void* ) &SlotFunc );
+}
 }
 
 #endif // GOBJECT_H
