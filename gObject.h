@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019  明心  <imleizhang@qq.com>
+ * Copyright (C) 2020  明心  <imleizhang@qq.com>
  * All rights reserved.
  *
  * This program is an open-source software; and it is distributed in the hope
@@ -16,13 +16,23 @@
 #ifndef GOBJECT_H
 #define GOBJECT_H
 
+#include <stddef.h>
+#include <pthread.h>
+#include <string.h>  
+#include <string>
+#include <pthread.h>
+
+#include <cxxabi.h>
+#include <stdlib.h>
 #include <list>
 #include <stdio.h>
 
 using namespace std;
 
+
 class GObjectPrivate;
 class GObject;
+class GEvent;
 
 #define slots
 
@@ -118,8 +128,8 @@ private:
 /**
  * @class GSignal
  * @brief  GSignal类用来定义信号，所述信号的函数类型为void (*)(Args...)。\n
- * 比如：GSignal<int> intSig;//定义一个函数类型为void intSig(int);
- * 比如：GSignal<int, float> ifSig;//定义一个函数类型为void ifSig(int,  float);
+ * 比如：GSignal<int> intSig;
+ * 比如：GSignal<int, float> ifSig;
  *
  */
 template<typename ...Args>
@@ -206,8 +216,22 @@ private:
 
 #define signals public
 
+#define SET_CLASS_NAME(any_type) \
+public: \
+    virtual const char *className() const \
+    { \
+        static string s_name; \
+        char* name = abi::__cxa_demangle(typeid(any_type).name(), NULL, NULL, NULL); \
+        s_name = name; \
+        free(name); \
+        return s_name.c_str(); \
+    }
+
+
 class  GObject
 {
+	SET_CLASS_NAME(GObject)
+	
 signals:
     GSignal<GObject*> sigDestroyed;
 
@@ -252,17 +276,16 @@ public:
 
     const char *name() const;
     GObject *parent() const;
-
-
+    virtual bool event(GEvent*);
+    pthread_t  tid();
+    
 private:
     static int  privConnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot);
     static int  privDisconnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot);
-    void saveSenderPair(GObject* sender, SIGNAL_POINTER signal);
-    void deleteSenderPair(GObject* sender, SIGNAL_POINTER signal);
-    void destructAsReceiver();
-    void destructAsSender();
-    void saveReceiver ( GObject* receiver );
-    void deleteReceiver ( GObject* receiver );
+    void saveSender(SIGNAL_POINTER signal);
+    void deleteSender(SIGNAL_POINTER signal);
+    void disconnectFromAllSignal();
+
 };
 
 template<class Receiver, typename ...Args>
@@ -284,4 +307,4 @@ int  GObject::disconnect ( GObject* sender, GSignal<Args...>& signal, Receiver* 
     return ret;
 }
 
-#endif // GOBJECT_H
+#endif 
