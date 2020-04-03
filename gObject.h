@@ -16,23 +16,15 @@
 #ifndef GOBJECT_H
 #define GOBJECT_H
 
-#include <stddef.h>
-#include <pthread.h>
-#include <string.h>  
 #include <string>
-#include <pthread.h>
-
 #include <cxxabi.h>
-#include <stdlib.h>
 #include <list>
 #include <stdio.h>
 
 using namespace std;
 
-
 class GObjectPrivate;
 class GObject;
-class GEvent;
 
 #define slots
 
@@ -128,8 +120,8 @@ private:
 /**
  * @class GSignal
  * @brief  GSignal类用来定义信号，所述信号的函数类型为void (*)(Args...)。\n
- * 比如：GSignal<int> intSig;
- * 比如：GSignal<int, float> ifSig;
+ * 比如：GSignal<int> intSig;//定义一个函数类型为void intSig(int);
+ * 比如：GSignal<int, float> ifSig;//定义一个函数类型为void ifSig(int,  float);
  *
  */
 template<typename ...Args>
@@ -276,16 +268,17 @@ public:
 
     const char *name() const;
     GObject *parent() const;
-    virtual bool event(GEvent*);
-    pthread_t  tid();
-    
+
+
 private:
     static int  privConnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot);
     static int  privDisconnect(GObject* sender, SIGNAL_POINTER signal, GObject* receiver, void* slot);
-    void saveSender(SIGNAL_POINTER signal);
-    void deleteSender(SIGNAL_POINTER signal);
-    void disconnectFromAllSignal();
-
+    void saveSenderPair(GObject* sender, SIGNAL_POINTER signal);
+    void deleteSenderPair(GObject* sender, SIGNAL_POINTER signal);
+    void destructAsReceiver();
+    void destructAsSender();
+    void saveReceiver ( GObject* receiver );
+    void deleteReceiver ( GObject* receiver );
 };
 
 template<class Receiver, typename ...Args>
@@ -307,4 +300,4 @@ int  GObject::disconnect ( GObject* sender, GSignal<Args...>& signal, Receiver* 
     return ret;
 }
 
-#endif 
+#endif // GOBJECT_H
