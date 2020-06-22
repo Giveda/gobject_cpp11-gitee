@@ -34,8 +34,10 @@ enum E_SLOT_TYPE
     CPP_SLOT_TYPE,
 };
 
-template<typename ...Args>
-class  GSlotAPI
+template<typename F>
+class GSlotAPI;
+template<typename Ret, typename ...Args>
+class  GSlotAPI<Ret(Args...)>
 {
 public:
     E_SLOT_TYPE type() const
@@ -73,34 +75,16 @@ private:
     E_SLOT_TYPE m_type;
 };
 
-template<typename ...Args>
-class GSlotC : public GSlotAPI<Args...>
-{
-private:
-    typedef void ( *SlotFuncType ) ( Args... );
-
-public:
-    GSlotC ( SlotFuncType slot )
-    : GSlotAPI<Args...>( (void*)slot )
-    {
-    }
-    virtual ~GSlotC() {}
-
-public:
-    void operator() ( Args&... args )
-    {
-        ( (SlotFuncType)GSlotAPI<Args...>::m_slot) ( args... );
-    }
-};
-
-template<typename Receiver, typename ...Args>
-class GSlotCpp : public GSlotAPI<Args...>
+template<typename Receiver, typename F>
+class GSlotCpp;
+template<typename Receiver, typename Ret, typename ...Args>
+class GSlotCpp<Receiver, Ret(Args...)> : public GSlotAPI<Ret(Args...)>
 {
 public:
     typedef void ( Receiver::*SlotFuncType ) ( Args... );
 
     GSlotCpp ( Receiver* r, SlotFuncType slot )
-    : GSlotAPI<Args...>( (void*)slot, (GObject*)r, CPP_SLOT_TYPE),
+    : GSlotAPI<Ret(Args...)>( (void*)slot, (GObject*)r, CPP_SLOT_TYPE),
     m_class_slot(slot)
     {
     }
@@ -110,7 +94,7 @@ public:
 public:
     void operator() ( Args&... args )
     {
-        ( ( (Receiver*)GSlotAPI<Args...>::m_receiver)->*m_class_slot ) ( args... );
+        ( ( (Receiver*)GSlotAPI<Ret(Args...)>::m_receiver)->*m_class_slot ) ( args... );
     }
     
 private:
@@ -119,16 +103,18 @@ private:
 
 /**
  * @class GSignal
- * @brief  GSignal类用来定义信号，所述信号的函数类型为void (*)(Args...)。\n
- * 比如：GSignal<int> intSig;//定义一个函数类型为void intSig(int);
- * 比如：GSignal<int, float> ifSig;//定义一个函数类型为void ifSig(int,  float);
+ * @brief  GSignal 类用来定义信号，所述信号的函数类型为Ret (*)(Args...)。\n
+ * 比如：GSignal<void(int)> intSig;//定义一个函数类型为void intSig(int);
+ * 比如：GSignal<void(int, float)> ifSig;//定义一个函数类型为void ifSig(int,  float);
  *
  */
-template<typename ...Args>
-class GSignal
+template<typename F>
+class GSignal;
+template<typename Ret, typename... Args>
+class GSignal<Ret(Args...)>
 {
 public:
-    typedef list<GSlotAPI<Args...>* > SlotLstType;
+    typedef list<GSlotAPI<Ret(Args...)>* > SlotLstType;
 
 public:
     /**
@@ -225,7 +211,7 @@ class  GObject
 	SET_CLASS_NAME(GObject)
 	
 signals:
-    GSignal<GObject*> sigDestroyed;
+    GSignal<void(void)> sigDestroyed;
 
 private:
     GObjectPrivate *m_priv;
@@ -249,7 +235,7 @@ public:
      * @return 0代表成功；非0代表失败
      */
     template<class Receiver, typename ...Args>
-    static int  connect ( GObject* sender, GSignal<Args...>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) );
+    static int  connect ( GObject* sender, GSignal<void(Args...)>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) );
 
     /**
      * @brief 将信号和槽断开连接。\n
@@ -264,7 +250,7 @@ public:
      * @return 0代表成功；非0代表失败
      */
     template<class Receiver, typename ...Args>
-    static int  disconnect ( GObject* sender, GSignal<Args...>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) );
+    static int  disconnect ( GObject* sender, GSignal<void(Args...)>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) );
 
     const char *name() const;
     GObject *parent() const;
@@ -282,9 +268,9 @@ private:
 };
 
 template<class Receiver, typename ...Args>
-int  GObject::connect ( GObject* sender, GSignal<Args...>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) )
+int  GObject::connect ( GObject* sender, GSignal<void(Args...)>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) )
 {
-    GSlotCpp<Receiver, Args...> *vslot = new GSlotCpp<Receiver, Args...>(receiver, SlotFunc);
+    GSlotCpp<Receiver, void(Args...)> *vslot = new GSlotCpp<Receiver, void(Args...)>(receiver, SlotFunc);
     int ret = privConnect(sender, reinterpret_cast<SIGNAL_POINTER>(&(signal._slotLst)), (GObject*)receiver, (void*)vslot);
     if(0 != ret)
     {
@@ -294,7 +280,7 @@ int  GObject::connect ( GObject* sender, GSignal<Args...>& signal, Receiver* rec
 }
 
 template<class Receiver, typename ...Args>
-int  GObject::disconnect ( GObject* sender, GSignal<Args...>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) )
+int  GObject::disconnect ( GObject* sender, GSignal<void(Args...)>& signal, Receiver* receiver, void ( Receiver::*SlotFunc ) ( Args... ) )
 {
     int ret = privDisconnect(sender, reinterpret_cast<SIGNAL_POINTER>(&(signal._slotLst)), (GObject*)receiver, (void*)SlotFunc);
     return ret;
