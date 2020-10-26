@@ -63,7 +63,7 @@ public:
     /**
      * 定义一个名称为selected的信号；该信号接收两个参数，参数类型分别为const string&和int
      */
-    GSignal<const string&, int> selected;
+    GSignal<void(const string&, int)> selected;
 
 public:
     /**
