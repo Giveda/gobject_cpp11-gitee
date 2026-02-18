@@ -25,4 +25,4 @@
  
  
 # 新版本&联系方式
-请到 http://giveda.com/ 下载最新开源代码。  
+请到 http://mike6924@outlook/ 下载最新开源代码。  

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020  明心  <imleizhang@qq.com>
+ * Copyright (C) 2020  明心  <mike6924@outlook.com>
  * All rights reserved.
  *
  * This program is an open-source software; and it is distributed in the hope
@@ -73,7 +73,7 @@ public:
      */
     void notify()
     {
-        string a ( "giveda.com" );
+        string a ( "mike6924@outlook" );
         selected ( a, 3 );
 
         a = "Hello, Giveda!";
